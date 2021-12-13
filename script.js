@@ -67,8 +67,8 @@ class App {
 	#workouts = [];
 	#flag = false;
 	constructor() {
-		//get location data
-		this._getPosition();
+		//get location data & render map
+		this._init();
 		//get workouts array from localstorage
 		this._getLocalStorage();
 		//attach evenlisteners
@@ -78,22 +78,20 @@ class App {
 		btnReset.addEventListener('click', this.reset.bind(this));
 		containerWorkouts.addEventListener('click', this._flyTo);
 	}
-	_getPosition() {
-		if (navigator.geolocation) {
-			navigator.geolocation.getCurrentPosition(this._loadMap.bind(this), () =>
-				alert('Could not retrieve position'),
-			);
-		}
-	}
-	_loadMap(position) {
-		const { latitude } = position.coords;
-		const { longitude } = position.coords;
-		const coords = [latitude, longitude];
-		this.#map = L.map('map').setView(coords, this.#mapZoomLevel);
-		googleSat.addTo(this.#map);
-		this.#map.on('click', this._showForm.bind(this));
-		this.#workouts.forEach(e => {
-			this._renderWorkoutMarker(e);
+
+	_init() {
+		new Promise((resolve, reject) => {
+			if (!navigator.geolocation) reject('no navigator api');
+			navigator.geolocation.getCurrentPosition(resolve);
+		}).then(position => {
+			const { latitude, longitude } = position.coords;
+			const coords = [latitude, longitude];
+			this.#map = L.map('map').setView(coords, this.#mapZoomLevel);
+			googleSat.addTo(this.#map);
+			this.#map.on('click', this._showForm.bind(this));
+			this.#workouts.forEach(e => {
+				this._renderWorkoutMarker(e);
+			});
 		});
 	}
 
